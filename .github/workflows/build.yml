@@ -95,11 +95,13 @@ jobs:
         run: brew install ninja ccache
 
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-          -DPLATFORM=$BUILD_PLATFORM -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        env:
+          MACOSX_DEPLOYMENT_TARGET: 11.0
+          CMAKE_OSX_ARCHITECTURES: "arm64;x86_64"
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPLATFORM=$BUILD_PLATFORM -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Verify deployment target is 11.0
+        run: cmake -LA -N build | grep -E "CMAKE_OSX_DEPLOYMENT_TARGET:.*11\\.0" && cmake -LA -N build | grep -E "CMAKE_OSX_ARCHITECTURES:.*arm64;x86_64"
 
       - name: Build
         run: cmake --build build --parallel
