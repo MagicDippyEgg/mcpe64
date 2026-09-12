@@ -136,6 +136,10 @@ endif()
 
 if(PLATFORM STREQUAL "PLATFORM_GLFW")
     list(APPEND SOURCES "src/AppPlatform_glfw.cpp")
+    if(APPLE)
+        list(APPEND SOURCES "src/world/level/storage/MoveFolder.mm")
+        set_source_files_properties("src/world/level/storage/MoveFolder.mm" PROPERTIES LANGUAGE CXX)
+    endif()
 endif()
 
 # Explicitly list files added after the initial glob so they are always included
@@ -153,6 +157,11 @@ add_executable(${PROJECT_NAME}
 if(WIN32)
     set(EXTRA_LIBS "ws2_32")
     target_compile_definitions(${PROJECT_NAME} PUBLIC "_CRT_SECURE_NO_WARNINGS")
+endif()
+
+if(APPLE)
+    find_library(FOUNDATION_LIBRARY Foundation)
+    set(EXTRA_LIBS ${EXTRA_LIBS} ${FOUNDATION_LIBRARY})
 endif()
 
 if(PLATFORM STREQUAL "PLATFORM_WIN32" OR PLATFORM STREQUAL "PLATFORM_GLFW")

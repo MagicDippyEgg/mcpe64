@@ -800,6 +800,12 @@
 		D5B50FC014CFF670005F7284 /* Options.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50C8814CFF66F005F7284 /* Options.cpp */; };
 		D5B50FC114CFF670005F7284 /* OptionStrings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50C8A14CFF66F005F7284 /* OptionStrings.cpp */; };
 		D5B50FC214CFF670005F7284 /* OptionStrings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50C8A14CFF66F005F7284 /* OptionStrings.cpp */; };
+		D5DEAD1114CFF670005F7001 /* OptionsFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5DEAD0114CFF670005F7001 /* OptionsFile.cpp */; };
+		D5DEAD1114CFF670005F7002 /* OptionsItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5DEAD0114CFF670005F7002 /* OptionsItem.cpp */; };
+		D5DEAD1114CFF670005F7003 /* GuiElementContainer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5DEAD0114CFF670005F7003 /* GuiElementContainer.cpp */; };
+		D5DEAD1114CFF670005F7004 /* Slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5DEAD0114CFF670005F7004 /* Slider.cpp */; };
+		D5DEAD1114CFF670005F7005 /* CreditsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5DEAD0114CFF670005F7005 /* CreditsScreen.cpp */; };
+		D5DEAD1114CFF670005F7006 /* UsernameScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5DEAD0114CFF670005F7006 /* UsernameScreen.cpp */; };
 		D5B50FC314CFF670005F7284 /* Particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50C9214CFF66F005F7284 /* Particle.cpp */; };
 		D5B50FC414CFF670005F7284 /* Particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50C9214CFF66F005F7284 /* Particle.cpp */; };
 		D5B50FC514CFF670005F7284 /* ParticleEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50C9414CFF66F005F7284 /* ParticleEngine.cpp */; };
@@ -1845,6 +1851,12 @@
 		D5B50C8514CFF66F005F7284 /* MouseHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MouseHandler.h; sourceTree = "<group>"; };
 		D5B50C8714CFF66F005F7284 /* MultiPlayerLevel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MultiPlayerLevel.h; sourceTree = "<group>"; };
 		D5B50C8814CFF66F005F7284 /* Options.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Options.cpp; sourceTree = "<group>"; };
+		D5DEAD0114CFF670005F7001 /* OptionsFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OptionsFile.cpp; sourceTree = "<group>"; };
+		D5DEAD0114CFF670005F7002 /* OptionsItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OptionsItem.cpp; sourceTree = "<group>"; };
+		D5DEAD0114CFF670005F7003 /* GuiElementContainer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GuiElementContainer.cpp; sourceTree = "<group>"; };
+		D5DEAD0114CFF670005F7004 /* Slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Slider.cpp; sourceTree = "<group>"; };
+		D5DEAD0114CFF670005F7005 /* CreditsScreen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreditsScreen.cpp; sourceTree = "<group>"; };
+		D5DEAD0114CFF670005F7006 /* UsernameScreen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UsernameScreen.cpp; sourceTree = "<group>"; };
 		D5B50C8914CFF66F005F7284 /* Options.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Options.h; sourceTree = "<group>"; };
 		D5B50C8A14CFF66F005F7284 /* OptionStrings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OptionStrings.cpp; sourceTree = "<group>"; };
 		D5B50C8B14CFF66F005F7284 /* OptionStrings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OptionStrings.h; sourceTree = "<group>"; };
@@ -3171,6 +3183,7 @@
 				D5B50C8614CFF66F005F7284 /* multiplayer */,
 				D5B50C8814CFF66F005F7284 /* Options.cpp */,
 				D5B50C8914CFF66F005F7284 /* Options.h */,
+				D5DEAD0114CFF670005F7001 /* OptionsFile.cpp */,
 				D5B50C8A14CFF66F005F7284 /* OptionStrings.cpp */,
 				D5B50C8B14CFF66F005F7284 /* OptionStrings.h */,
 				D5B50C8C14CFF66F005F7284 /* particle */,
@@ -3250,6 +3263,9 @@
 				D5B8628B1538178F00F3238A /* ScrollingPane.h */,
 				D5B50C3414CFF66F005F7284 /* SmallButton.cpp */,
 				D5B50C3514CFF66F005F7284 /* SmallButton.h */,
+				D5DEAD0114CFF670005F7002 /* OptionsItem.cpp */,
+				D5DEAD0114CFF670005F7003 /* GuiElementContainer.cpp */,
+				D5DEAD0114CFF670005F7004 /* Slider.cpp */,
 			);
 			path = components;
 			sourceTree = "<group>";
@@ -3302,6 +3318,8 @@
 				D5B50C5714CFF66F005F7284 /* SelectWorldScreen.h */,
 				D5B50C5814CFF66F005F7284 /* StartMenuScreen.cpp */,
 				D5B50C5914CFF66F005F7284 /* StartMenuScreen.h */,
+				D5DEAD0114CFF670005F7005 /* CreditsScreen.cpp */,
+				D5DEAD0114CFF670005F7006 /* UsernameScreen.cpp */,
 				D5B50C5A14CFF66F005F7284 /* touch */,
 				D5B50C6314CFF66F005F7284 /* UploadPhotoScreen.cpp */,
 				D5B50C6414CFF66F005F7284 /* UploadPhotoScreen.h */,
@@ -5062,6 +5080,12 @@
 				D5B50FBE14CFF670005F7284 /* QuadrupedModel.cpp in Sources */,
 				D5B50FC014CFF670005F7284 /* Options.cpp in Sources */,
 				D5B50FC214CFF670005F7284 /* OptionStrings.cpp in Sources */,
+				D5DEAD1114CFF670005F7001 /* OptionsFile.cpp in Sources */,
+				D5DEAD1114CFF670005F7002 /* OptionsItem.cpp in Sources */,
+				D5DEAD1114CFF670005F7003 /* GuiElementContainer.cpp in Sources */,
+				D5DEAD1114CFF670005F7004 /* Slider.cpp in Sources */,
+				D5DEAD1114CFF670005F7005 /* CreditsScreen.cpp in Sources */,
+				D5DEAD1114CFF670005F7006 /* UsernameScreen.cpp in Sources */,
 				D5B50FC414CFF670005F7284 /* Particle.cpp in Sources */,
 				D5B50FC614CFF670005F7284 /* ParticleEngine.cpp in Sources */,
 				D5B50FC814CFF670005F7284 /* KeyboardInput.cpp in Sources */,
@@ -5403,6 +5427,12 @@
 				D5B50FBD14CFF670005F7284 /* QuadrupedModel.cpp in Sources */,
 				D5B50FBF14CFF670005F7284 /* Options.cpp in Sources */,
 				D5B50FC114CFF670005F7284 /* OptionStrings.cpp in Sources */,
+				D5DEAD1114CFF670005F7001 /* OptionsFile.cpp in Sources */,
+				D5DEAD1114CFF670005F7002 /* OptionsItem.cpp in Sources */,
+				D5DEAD1114CFF670005F7003 /* GuiElementContainer.cpp in Sources */,
+				D5DEAD1114CFF670005F7004 /* Slider.cpp in Sources */,
+				D5DEAD1114CFF670005F7005 /* CreditsScreen.cpp in Sources */,
+				D5DEAD1114CFF670005F7006 /* UsernameScreen.cpp in Sources */,
 				D5B50FC314CFF670005F7284 /* Particle.cpp in Sources */,
 				D5B50FC514CFF670005F7284 /* ParticleEngine.cpp in Sources */,
 				D5B50FC714CFF670005F7284 /* KeyboardInput.cpp in Sources */,
