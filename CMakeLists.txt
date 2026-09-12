@@ -22,7 +22,7 @@ CPMAddPackage(
         "ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR}"
         "PNG_TOOLS OFF"
         "PNG_TESTS OFF"
-        "PNG_ARM_NEON OFF"
+        "PNG_ARM_NEON off"
         "BUILD_SHARED_LIBS ON"
 )
 
