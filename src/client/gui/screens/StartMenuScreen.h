@@ -41,8 +41,6 @@ private:
 	Button bQuit;
 	int panoramaTimer;
 	std::string splashText;
-	unsigned int _panoramaTex;
-	bool _panoramaTexReady;
 #endif
 
 	std::string copyright;

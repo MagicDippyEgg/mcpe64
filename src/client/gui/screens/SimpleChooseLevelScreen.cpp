@@ -128,7 +128,19 @@ void SimpleChooseLevelScreen::render( int xm, int ym, float a )
 {
     renderDirtBackground(0);
 #ifdef PLATFORM_DESKTOP
-    drawCenteredString(minecraft->font, "Create World", width / 2, 8, 0xffffffff);
+	// Java 1.4.7 "Create New World" style panel behind the form
+	const int p0x = width / 2 - 150;
+	const int p1x = width / 2 + 150;
+	const int p0y = 6;
+	const int p1y = height - 8;
+	fill(p0x, p0y, p1x, p1y, 0xd031251b);
+	fill(p0x, p0y, p1x, p0y + 1, 0xc0a0a0a0);
+	fill(p0x, p0y, p0x + 1, p1y, 0xc0a0a0a0);
+	fill(p1x - 1, p0y, p1x, p1y, 0xc0414136);
+	fill(p0x, p1y - 1, p1x, p1y, 0xc0414136);
+	drawCenteredString(minecraft->font, "Create New World", width / 2, 14, 0xffffffff);
+#else
+	drawCenteredString(minecraft->font, "Create World", width / 2, 8, 0xffffffff);
 #endif
     glEnable2(GL_BLEND);
 

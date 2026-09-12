@@ -33,7 +33,12 @@ IngameBlockSelectionScreen::IngameBlockSelectionScreen()
 void IngameBlockSelectionScreen::init()
 {
 	Inventory* inventory = minecraft->player->inventory;
+#ifdef PLATFORM_DESKTOP
+	// Java inventory layout: nine columns regardless of game mode
+	InventoryCols = 9;
+#else
 	InventoryCols = minecraft->isCreativeMode()? 13 : 9;
+#endif
 	InventorySize = inventory->getContainerSize() - Inventory::MAX_SELECTION_SIZE;
 	InventoryRows = 1 + (InventorySize - 1) / InventoryCols;
 
@@ -73,18 +78,9 @@ void IngameBlockSelectionScreen::removed()
 
 void IngameBlockSelectionScreen::renderSlots()
 {
-	//static Stopwatch w;
-	//w.start();
-
 	glColor4f2(1, 1, 1, 1);
 
 	blitOffset = -90;
-
-	//glEnable2(GL_RESCALE_NORMAL);
-	//glPushMatrix2();
-	//glRotatef2(180, 1, 0, 0);
-	//Lighting::turnOn();
-	//glPopMatrix2();
 
 	minecraft->textures->loadAndBindTexture("gui/gui.png");
 	for (int r = 0; r < InventoryRows; r++)
@@ -92,6 +88,18 @@ void IngameBlockSelectionScreen::renderSlots()
 		int x = getSlotPosX(0) - 3;
 		int y = getSlotPosY(r) - 3;
 
+#ifdef PLATFORM_DESKTOP
+		// Java 1.4.7 inventory look: a dark translucent panel behind the
+		// whole grid, then a beveled slot box per item.
+		fill(getSlotPosX(0) - 5, getSlotPosY(0) - 5,
+		     getSlotPosX(InventoryCols) + 5, getSlotPosY(InventoryRows) - 3,
+		     0x50 << 24);
+		fill(getSlotPosX(0) - 5, getSlotPosY(0) - 5,
+		     getSlotPosX(InventoryCols) + 5, getSlotPosY(0) - 4, 0xa0 << 24);
+		fill(getSlotPosX(0) - 5, getSlotPosY(InventoryRows) - 4,
+		     getSlotPosX(InventoryCols) + 5, getSlotPosY(InventoryRows) - 3, 0xa0 << 24);
+		break;
+#else
 		if (InventoryCols == 9) {
 			blit(x, y, 0, 0, 182, 22);
 		} else {
@@ -102,28 +110,45 @@ void IngameBlockSelectionScreen::renderSlots()
 			const int w = k * 20;
 			blit(x + 162, y, 182-w, 0, w, 22);
 		}
+#endif
 	}
+#ifndef PLATFORM_DESKTOP
 	if (selectedItem >= 0)
 	{
-		int x = getSlotPosX(selectedItem % InventoryCols) - 4;// width / 2 - 182 / 2 - 1 + () * 20;
-		int y = getSlotPosY(selectedItem / InventoryCols) - 4;// height - 22 * 3 - 1 - (selectedItem / InventoryCols) * 22;
+		int x = getSlotPosX(selectedItem % InventoryCols) - 4;
+		int y = getSlotPosY(selectedItem / InventoryCols) - 4;
 		blit(x, y, 0, 22, 24, 22);
 	}
-
+#endif
 	for (int r = 0; r < InventoryRows; r++)
 	{
-		int y = getSlotPosY(r);
 		for (int i = 0; i < InventoryCols; i++) {
 			int x = getSlotPosX(i);
+			int y = getSlotPosY(r);
+
+#ifdef PLATFORM_DESKTOP
+			const int sIdx = r * InventoryCols + i;
+			// beveled slot box (Java container slots)
+			fill(x - 3, y - 3, x + 18, y + 18, 0x40382f25);
+			fill(x - 3, y - 3, x + 18, y - 2, 0x80a8a8a8);
+			fill(x - 3, y - 3, x - 2, y + 18, 0x80a8a8a8);
+			fill(x + 17, y - 3, x + 18, y + 18, 0x80555555);
+			fill(x - 3, y + 17, x + 18, y + 18, 0x80555555);
+			if (sIdx == selectedItem) {
+				fill(x - 4, y - 4, x + 19, y - 3, 0xffffffff);
+				fill(x - 4, y - 4, x - 3, y + 19, 0xffffffff);
+				fill(x + 18, y - 4, x + 19, y + 19, 0xffffffff);
+				fill(x - 4, y + 18, x + 19, y + 19, 0xffffffff);
+			}
+#endif
 			renderSlot(r * InventoryCols + i + Inventory::MAX_SELECTION_SIZE, x, y, 0);
 		}
 	}
 
-	//w.stop();
-	//w.printEvery(1000, "render-blocksel");
-
-	//glDisable2(GL_RESCALE_NORMAL);
-	//Lighting::turnOn();
+#ifdef PLATFORM_DESKTOP
+	drawCenteredString(minecraft->font, "Inventory",
+	                   width / 2, getSlotPosY(0) - 12, 0xffffffff);
+#endif
 }
 
 int IngameBlockSelectionScreen::getSlotPosX(int slotX) {

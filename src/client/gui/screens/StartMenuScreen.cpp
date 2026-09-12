@@ -53,19 +53,13 @@ StartMenuScreen::StartMenuScreen()
 	bMultiplayer(2, "Multiplayer"),
 	bOptionsJava(0, 0, 0, 98, 20, "Options"),
 	bQuit(4, 0, 0, 98, 20, "Quit"),
-	panoramaTimer(0),
-	_panoramaTex(0),
-	_panoramaTexReady(false)
+	panoramaTimer(0)
 #endif
 {
 }
 
 StartMenuScreen::~StartMenuScreen()
 {
-#ifdef PLATFORM_DESKTOP
-	if (_panoramaTexReady)
-		glDeleteTextures(1, &_panoramaTex);
-#endif
 }
 
 void StartMenuScreen::init()
@@ -289,17 +283,6 @@ bool StartMenuScreen::isInGameScreen() { return false; }
 #ifdef PLATFORM_DESKTOP
 void StartMenuScreen::renderJavaPanorama()
 {
-	if (!_panoramaTexReady) {
-		glGenTextures(1, &_panoramaTex);
-		glBindTexture2(GL_TEXTURE_2D, _panoramaTex);
-		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexImage2D2(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		_panoramaTexReady = true;
-	}
-
 	static const char* paths[6] = {
 		"java/panorama0.png", "java/panorama1.png", "java/panorama2.png",
 		"java/panorama3.png", "java/panorama4.png", "java/panorama5.png"
@@ -313,10 +296,6 @@ void StartMenuScreen::renderJavaPanorama()
 		{ -90,  1, 0 }
 	};
 
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	glViewport(0, 0, 256, 256);
-
 	glDisable2(GL_CULL_FACE);
 	glDisable2(GL_DEPTH_TEST);
 	glDepthMask(false);
@@ -325,92 +304,47 @@ void StartMenuScreen::renderJavaPanorama()
 	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glColor4f2(1, 1, 1, 1);
 
+	// Java 1.4.7 PanoramaScreen: look out from the centre of the panorama
+	// cube. The 120 degree vertical fov with the faces at z=1 overfills the
+	// window, so the sky and the adjacent faces always reach the edges.
+	// Rendered straight to the screen with the running menu clock; no
+	// glCopyTexSubImage2D viewport juggling (that path is unreliable across
+	// desktop GL drivers and was producing a scrambled patch instead of the
+	// blurred sky).
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity2();
-	gluPerspective(120.0f, 1.0f, 0.05f, 10.0f);
+	gluPerspective(120.0f, (float)width / (float)height, 0.05f, 10.0f);
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity2();
 	glRotatef2(180.0f, 1, 0, 0);
 
-	// drawPanorama: 8x8 grid of camera jitter tiles, each compositing all 6 faces
 	const float timer = (float)panoramaTimer;
-	const int grid = 8;
-	Tesselator& t = Tesselator::instance;
-	for (int tile = 0; tile < grid * grid; ++tile) {
-		glPushMatrix2();
-		glTranslatef2(((float)(tile % grid) / (float)grid - 0.5f) / 64.0f,
-		              ((float)(tile / grid) / (float)grid - 0.5f) / 64.0f, 0.0f);
-		glRotatef2(Mth::sin((timer + (float)tile) / 400.0f) * 25.0f + 20.0f, 1, 0, 0);
-		glRotatef2(-(timer + (float)tile) * 0.1f, 0, 1, 0);
+	glRotatef2(Mth::sin(timer / 400.0f) * 25.0f + 20.0f, 1, 0, 0);
+	glRotatef2(-timer * 0.1f, 0, 1, 0);
 
-		for (int face = 0; face < 6; ++face) {
-			glPushMatrix2();
-			if (face > 0)
-				glRotatef2(rots[face][0], rots[face][1], rots[face][2], rots[face][3]);
-			minecraft->textures->loadAndBindTexture(paths[face]);
-			const int alpha = 255 / (tile + 1);
-			t.begin();
-			t.color(1.0f, 1.0f, 1.0f, (float)alpha / 255.0f);
-			t.vertexUV(-1.0f, -1.0f, 1.0f, 0.0f, 0.0f);
-			t.vertexUV( 1.0f, -1.0f, 1.0f, 1.0f, 0.0f);
-			t.vertexUV( 1.0f,  1.0f, 1.0f, 1.0f, 1.0f);
-			t.vertexUV(-1.0f,  1.0f, 1.0f, 0.0f, 1.0f);
-			t.draw();
-			glPopMatrix2();
-		}
+	Tesselator& t = Tesselator::instance;
+	for (int face = 0; face < 6; ++face) {
+		glPushMatrix2();
+		if (face > 0)
+			glRotatef2(rots[face][0], rots[face][1], rots[face][2], rots[face][3]);
+		minecraft->textures->loadAndBindTexture(paths[face]);
+		t.begin();
+		t.color(1.0f, 1.0f, 1.0f, 1.0f);
+		t.vertexUV(-1.0f, -1.0f, 1.0f, 0.0f, 0.0f);
+		t.vertexUV( 1.0f, -1.0f, 1.0f, 1.0f, 0.0f);
+		t.vertexUV( 1.0f,  1.0f, 1.0f, 1.0f, 1.0f);
+		t.vertexUV(-1.0f,  1.0f, 1.0f, 0.0f, 1.0f);
+		t.draw();
 		glPopMatrix2();
-		glColorMask(true, true, true, false);
 	}
-	glColorMask(true, true, true, true);
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-
-	// rotateAndBlurSkybox: 8 passes, copying the framebuffer into the viewport texture
-	// and smearing it across the 256x256 target with three offsets
-	glBindTexture2(GL_TEXTURE_2D, _panoramaTex);
-	for (int pass = 0; pass < 8; ++pass) {
-		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, 256, 256);
-		glEnable2(GL_BLEND);
-		glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColorMask(true, true, true, false);
-
-		for (int k = 0; k < 3; ++k) {
-			const float shift = (float)(k - 1) / 256.0f;
-			t.begin();
-			t.color(1.0f, 1.0f, 1.0f, 1.0f / (float)(k + 1));
-			t.vertexUV((float)width, (float)height, blitOffset, shift, 0.0f);
-			t.vertexUV((float)width, 0.0f,              blitOffset, 1.0f + shift, 0.0f);
-			t.vertexUV(0.0f,         0.0f,              blitOffset, 1.0f + shift, 1.0f);
-			t.vertexUV(0.0f,         (float)height,     blitOffset, shift, 1.0f);
-			t.draw();
-		}
-		glColorMask(true, true, true, true);
-	}
-
-	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-	// Final fit stretch onto the whole screen
-	glBindTexture2(GL_TEXTURE_2D, _panoramaTex);
-	glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glEnable2(GL_BLEND);
-	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	const float fit = (width > height) ? 120.0f / (float)width : 120.0f / (float)height;
-	const float hu = (float)height * fit / 256.0f;
-	const float wu = (float)width * fit / 256.0f;
-	glColor4f2(1, 1, 1, 1);
-	t.begin();
-	t.color(1, 1, 1, 1);
-	t.vertexUV(0.0f,         (float)height, blitOffset, 0.5f - hu, 0.5f + wu);
-	t.vertexUV((float)width, (float)height, blitOffset, 0.5f - hu, 0.5f - wu);
-	t.vertexUV((float)width, 0.0f,          blitOffset, 0.5f + hu, 0.5f - wu);
-	t.vertexUV(0.0f,         0.0f,          blitOffset, 0.5f + hu, 0.5f + wu);
-	t.draw();
 
 	glDepthMask(true);
 	glEnable2(GL_DEPTH_TEST);

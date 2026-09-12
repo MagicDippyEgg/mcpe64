@@ -253,13 +253,14 @@ void Inventory::setupDefault() {
 		addItem(new ItemInstance(Item::bow));
 		addItem(new ItemInstance(Item::sign));
 	} else {
-#if defined(WIN32)
+#if defined(WIN32) || defined(PLATFORM_DESKTOP)
 		// Survival
 		addItem(new ItemInstance(Item::ironIngot, 64));
 		addItem(new ItemInstance(Item::ironIngot, 34));
 		addItem(new ItemInstance(Tile::stonecutterBench));
 		addItem(new ItemInstance(Tile::workBench));
 		addItem(new ItemInstance(Tile::furnace));
+		addItem(new ItemInstance(Item::flintAndSteel));
 		addItem(new ItemInstance(Tile::wood, 54));
 		addItem(new ItemInstance(Item::stick, 14));
 		addItem(new ItemInstance(Item::coal, 31));
