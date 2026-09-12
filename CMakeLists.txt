@@ -12,6 +12,10 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "-Wno-narrowing")
 endif()
 
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 CPMAddPackage("gh:madler/zlib@1.3.2")
 CPMAddPackage(
     NAME "libpng"
