@@ -585,9 +585,39 @@ void Gui::renderHearts() {
 	int oh = minecraft->player->lastHealth;
 	random.setSeed(tickCount * 312871);
 
-	int xx = 2;//screenWidth / 2 - getNumSlots() * 10;
-
 	int armor = minecraft->player->getArmorValue();
+	int xx = 2;
+	int yBase = 2;
+
+#ifdef PLATFORM_DESKTOP
+	// Java 1.4.7 HUD: hearts bottom-left, armor directly above
+	xx = (int)(minecraft->width * InvGuiScale) / 2 - 91;
+	yBase = (int)(minecraft->height * InvGuiScale) - 39;
+	const int armorY = yBase - 10;
+	for (int i = 0; i < Player::MAX_HEALTH / 2; i++) {
+		int ip2 = i + i + 1;
+		int xo = xx + i * 8;
+		if (armor > 0) {
+			if (ip2 < armor) blit(xo, armorY, 16 + 2 * 9, 9 * 1, 9, 9);
+			else if (ip2 == armor) blit(xo, armorY, 16 + 4 * 9, 9 * 1, 9, 9);
+			else if (ip2 > armor) blit(xo, armorY, 16 + 0 * 9, 9 * 1, 9, 9);
+		}
+
+		int bg = 0;
+		if (blink) bg = 1;
+		int yo = yBase;
+		if (h <= 4) {
+			yo = yBase + random.nextInt(2) - 1;
+		}
+		blit(xo, yo, 16 + bg * 9, 9 * 0, 9, 9);
+		if (blink) {
+			if (ip2 < oh) blit(xo, yo, 16 + 6 * 9, 9 * 0, 9, 9);
+			else if (ip2 == oh) blit(xo, yo, 16 + 7 * 9, 9 * 0, 9, 9);
+		}
+		if (ip2 < h) blit(xo, yo, 16 + 4 * 9, 9 * 0, 9, 9);
+		else if (ip2 == h) blit(xo, yo, 16 + 5 * 9, 9 * 0, 9, 9);
+	}
+#else
 	for (int i = 0; i < Player::MAX_HEALTH / 2; i++) {
 		int yo = 2;
 		int ip2 = i + i + 1;
@@ -613,18 +643,30 @@ void Gui::renderHearts() {
 		if (ip2 < h) blit(xo, yo, 16 + 4 * 9, 9 * 0, 9, 9);
 		else if (ip2 == h) blit(xo, yo, 16 + 5 * 9, 9 * 0, 9, 9);
 	}
+#endif
 }
 
 void Gui::renderBubbles() {
 	if (minecraft->player->isUnderLiquid(Material::water)) {
-		int yo = 12;
 		int count = (int) std::ceil((minecraft->player->airSupply - 2) * 10.0f / Player::TOTAL_AIR_SUPPLY);
 		int extra = (int) std::ceil((minecraft->player->airSupply) * 10.0f / Player::TOTAL_AIR_SUPPLY) - count;
+#ifdef PLATFORM_DESKTOP
+		// Java 1.4.7: bubbles just left of the hearts, same row
+		int xx = (int)(minecraft->width * InvGuiScale) / 2 - 91;
+		int yo = (int)(minecraft->height * InvGuiScale) - 39;
+		for (int i = 0; i < count + extra; i++) {
+			int xo = xx - 8 - i * 8;
+			if (i < count) blit(xo, yo, 16, 9 * 2, 9, 9);
+			else blit(xo, yo, 16 + 9, 9 * 2, 9, 9);
+		}
+#else
+		int yo = 12;
 		for (int i = 0; i < count + extra; i++) {
 			int xo =  i * 8 + 2;
 			if (i < count) blit(xo, yo, 16, 9 * 2, 9, 9);
 			else blit(xo, yo, 16 + 9, 9 * 2, 9, 9);
 		}
+#endif
 	}
 }
 
@@ -962,7 +1004,11 @@ void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
 			x += 20;
 		}
 	}
+	#ifdef PLATFORM_DESKTOP
+	minecraft->textures->loadAndBindTexture("font/java8.png");
+	#else
 	minecraft->textures->loadAndBindTexture("font/default8.png");
+	#endif
 	t.endOverrideAndDraw();
 
 	glPopMatrix2();

@@ -92,6 +92,8 @@ public:
 	static float InvGuiScale;
 	static float GuiScale;
 
+	const GuiMessageList& getRecentMessages() const { return guiMessages; }
+
 private:
 	int MAX_MESSAGE_WIDTH;
 	//ItemRenderer itemRenderer;

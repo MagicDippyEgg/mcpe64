@@ -95,7 +95,11 @@ void Button::renderBg( Minecraft* minecraft, int xm, int ym )
 }
 
 bool Button::hovered(Minecraft* minecraft, int xm , int ym) {
+#ifdef PLATFORM_DESKTOP
+	return isInside(xm, ym);
+#else
 	return minecraft->useTouchscreen()? (_currentlyDown && isInside(xm, ym)) : false;
+#endif
 }
 
 bool Button::isInside( int xm, int ym ) {

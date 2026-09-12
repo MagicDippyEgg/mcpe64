@@ -23,11 +23,26 @@ public:
 private:
 	void _updateLicense();
 
+#ifdef PLATFORM_DESKTOP
+	void renderJavaTitleScreen(int xm, int ym, float a);
+	void renderJavaPanorama();
+#endif
+
 	Button bHost;
 	Button bJoin;
 	Button bOptions;
 	Button bTest;
 	Button bBuy;
+
+#ifdef PLATFORM_DESKTOP
+	Button bSingleplayer;
+	Button bMultiplayer;
+	Button bMods;
+	Button bOptionsJava;
+	Button bQuit;
+	float panoramaTimer;
+	std::string splashText;
+#endif
 
 	std::string copyright;
 	int copyrightPosX;

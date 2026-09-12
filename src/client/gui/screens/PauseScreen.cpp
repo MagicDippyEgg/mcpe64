@@ -1,5 +1,6 @@
 #include "PauseScreen.h"
 #include "StartMenuScreen.h"
+#include "JavaOptionsScreen.h"
 #include "../components/ImageButton.h"
 #include "../../Minecraft.h"
 #include "../../../util/Mth.h"
@@ -13,12 +14,20 @@ PauseScreen::PauseScreen(bool wasBackPaused)
 	bQuit(0),
 	bQuitAndSaveLocally(0),
 	bServerVisibility(0),
+#ifdef PLATFORM_DESKTOP
+	bAchievements(0),
+	bStats(0),
+	bOptions(0),
+#endif
 //	bThirdPerson(0),
 	wasBackPaused(wasBackPaused),
 	bSound(&Options::Option::SOUND, 1, 0),
 	bThirdPerson(&Options::Option::THIRD_PERSON),
     bHideGui(&Options::Option::HIDE_GUI)
 {
+#ifdef PLATFORM_DESKTOP
+	return;
+#endif
 	ImageDef def;
 	def.setSrc(IntRectangle(160, 144, 39, 31));
 	def.name = "gui/touchgui.png";
@@ -39,10 +48,44 @@ PauseScreen::~PauseScreen() {
 	delete bQuit;
 	delete bQuitAndSaveLocally;
 	delete bServerVisibility;
+#ifdef PLATFORM_DESKTOP
+	delete bAchievements;
+	delete bStats;
+	delete bOptions;
+#endif
 //	delete bThirdPerson;
 }
 
 void PauseScreen::init() {
+#ifdef PLATFORM_DESKTOP
+	// Minecraft Java 1.4.7 "Game menu"
+	bContinue = new Button(1, "Return to Game");
+	bQuit = new Button(2, "Return to Title Screen");
+	bQuitAndSaveLocally = new Button(3, "Save and Quit to Title");
+	bServerVisibility = new Button(4, "");
+	bAchievements = new Button(5, "Achievements");
+	bStats = new Button(6, "Statistics");
+	bOptions = new Button(7, "Options...");
+
+	// No achievements/statistics in this engine; keep them inert like Java when absent
+	bAchievements->active = false;
+	bStats->active = false;
+
+	buttons.push_back(bContinue);
+	buttons.push_back(bAchievements);
+	buttons.push_back(bStats);
+	buttons.push_back(bOptions);
+
+	if (minecraft->raknetInstance && minecraft->raknetInstance->isServer()) {
+		updateServerVisibilityText();
+		buttons.push_back(bServerVisibility);
+	}
+
+	buttons.push_back(bQuit);
+
+	tabButtons.insert(tabButtons.end(), buttons.begin(), buttons.end());
+	return;
+#endif
 	if (minecraft->useTouchscreen()) {
 		bContinue = new Touch::TButton(1, "Back to game");
 		bQuit = new Touch::TButton(2, "Quit to title");
@@ -97,7 +140,43 @@ void PauseScreen::init() {
 
 void PauseScreen::setupPositions() {
     saveStep = 0;
-	int yBase = 16;
+	int yBase;
+#ifdef PLATFORM_DESKTOP
+	// Java 1.4.7 layout: h/4 rows, 200px or 98px buttons
+	yBase = height / 4;
+
+	bContinue->width = 200;
+	bContinue->height = 20;
+	bContinue->x = (width - 200) / 2;
+	bContinue->y = yBase + 8;
+
+	bAchievements->width = 98;
+	bAchievements->height = 20;
+	bAchievements->x = width / 2 - 100;
+	bAchievements->y = yBase + 32;
+
+	bStats->width = 98;
+	bStats->height = 20;
+	bStats->x = width / 2 + 2;
+	bStats->y = yBase + 32;
+
+	bOptions->width = 98;
+	bOptions->height = 20;
+	bOptions->x = width / 2 - 100;
+	bOptions->y = yBase + 80;
+
+	bServerVisibility->width = 98;
+	bServerVisibility->height = 20;
+	bServerVisibility->x = width / 2 + 2;
+	bServerVisibility->y = yBase + 80;
+
+	bQuit->width = 200;
+	bQuit->height = 20;
+	bQuit->x = (width - 200) / 2;
+	bQuit->y = yBase + 104;
+	return;
+#endif
+	yBase = 16;
 
 	bContinue->width = bQuit->width = /*bThirdPerson->w =*/ 160;
 	bQuitAndSaveLocally->width = bServerVisibility->width = 160;
@@ -141,12 +220,36 @@ void PauseScreen::render(int xm, int ym, float a) {
 	//	drawString(font, "Saving level..", 8, height - 16, br << 16 | br << 8 | br);
 	//}
 
+	#ifdef PLATFORM_DESKTOP
+	drawCenteredString(font, "Game menu", width / 2, 40, 0xffffff);
+#else
 	drawCenteredString(font, "Game menu", width / 2, 24, 0xffffff);
+#endif
 
 	super::render(xm, ym, a);
 }
 
 void PauseScreen::buttonClicked(Button* button) {
+#ifdef PLATFORM_DESKTOP
+	if (button->id == bContinue->id) {
+		minecraft->setScreen(NULL);
+	}
+	if (button->id == bOptions->id) {
+		minecraft->setScreen(new JavaOptionsScreen(this));
+	}
+	if (button->id == bQuit->id) {
+		minecraft->leaveGame();
+	}
+	if (button->id == bServerVisibility->id) {
+		if (minecraft->raknetInstance && minecraft->netCallback && minecraft->raknetInstance->isServer()) {
+			ServerSideNetworkHandler* ss = (ServerSideNetworkHandler*) minecraft->netCallback;
+			bool allows = !ss->allowsIncomingConnections();
+			ss->allowIncomingConnections(allows);
+			updateServerVisibilityText();
+		}
+	}
+	return;
+#endif
 	if (button->id == bContinue->id) {
 		minecraft->setScreen(NULL);
 		//minecraft->grabMouse();

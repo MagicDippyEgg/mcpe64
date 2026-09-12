@@ -194,6 +194,39 @@ std::string ConsoleScreen::processCommand(const std::string& raw)
 // ---------------------------------------------------------------------------
 void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
 {
+#ifdef PLATFORM_DESKTOP
+	// Minecraft Java 1.4.7 chat look: dimmed world, message history top-left, "> " prompt
+	fillGradient(0, 0, width, height, 0x00000000, 0x40000000);
+
+	const int messageTicksAlive = 200;
+	const GuiMessageList& messages = minecraft->gui.getRecentMessages();
+	std::vector<unsigned int> visible;
+	for (unsigned int i = 0; i < messages.size(); ++i)
+		if (messages[i].ticks < messageTicksAlive)
+			visible.push_back(i);
+
+	unsigned int y = 2;
+	unsigned int start = visible.size() > 8? visible.size() - 8 : 0;
+	for (unsigned int k = start; k < visible.size(); ++k) {
+		const GuiMessage& m = messages[visible[k]];
+		float t = m.ticks / (float)messageTicksAlive;
+		t = 1 - t;
+		t = t * t;
+		int alpha = (int)(255 * t);
+		if (alpha <= 0) continue;
+
+		fill(2, (int)y, width - 2, (int)y + 8, (alpha / 2) << 24);
+		Gui::drawColoredString(font, m.message, 2, (float)y + 1, alpha);
+		y += 9;
+	}
+
+	std::string displayed = std::string("> ") + _input;
+	if ((_cursorBlink / 10) % 2 == 0)
+		displayed += '_';
+	font->drawShadow(displayed, 2.0f, (float)(height - 12), 0xffffffff);
+	return;
+#else
+
     // Dim the game world slightly
     fillGradient(0, 0, width, height, 0x00000000, 0x40000000);
 
@@ -220,4 +253,5 @@ void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
         font->drawShadow("Type a message or /command", (float)(boxX0 + 2), (float)(boxY + 2), 0xff606060);
     else
         font->drawShadow(displayed, (float)(boxX0 + 2), (float)(boxY + 2), 0xffffffff);
+#endif
 }

@@ -1124,7 +1124,11 @@ void Minecraft::init()
 	particleEngine = new ParticleEngine(level, textures);
 
 	// Platform specific initialization here
+#ifdef PLATFORM_DESKTOP
+	font = new Font(&options, "font/java8.png", textures);
+#else
 	font = new Font(&options, "font/default8.png", textures);
+#endif
 
 	_perfRenderer = new PerfRenderer(this, font);
 

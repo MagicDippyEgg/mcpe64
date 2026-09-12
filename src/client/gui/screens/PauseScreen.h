@@ -35,6 +35,12 @@ private:
 	Button* bServerVisibility;
 //	Button* bThirdPerson;
 
+#ifdef PLATFORM_DESKTOP
+	Button* bAchievements;
+	Button* bStats;
+	Button* bOptions;
+#endif
+
 	OptionButton bSound;
 	OptionButton bThirdPerson;
     OptionButton bHideGui;
