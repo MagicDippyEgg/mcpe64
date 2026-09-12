@@ -13,7 +13,7 @@
 #if defined(OPENGL_ES) // || defined(ANDROID)
 	#define USE_VBO
 	#define GL_QUADS 0x0007
-    #if defined(__APPLE__)
+    #if defined(__APPLE__) && defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
         #import <OpenGLES/ES1/gl.h>
         #import <OpenGLES/ES1/glext.h>
     #elif defined(ANDROID)
