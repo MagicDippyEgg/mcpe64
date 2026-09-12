@@ -31,18 +31,25 @@ SimpleChooseLevelScreen::~SimpleChooseLevelScreen()
 
 void SimpleChooseLevelScreen::init()
 {
+#ifdef PLATFORM_DESKTOP
+    // desktop: Java-style dialog, no touch header bar
+    bHeader = NULL;
+    bBack = new Button(2, "Back");
+#else
     // header + close button
     bHeader = new Touch::THeader(0, "Create World");
-    // create the back/X button as ImageButton like CreditsScreen
-    bBack = new ImageButton(2, "");
+    // create the back/X button like CreditsScreen
     {
+        ImageButton* b = new ImageButton(2, "");
         ImageDef def;
         def.name = "gui/touchgui.png";
         def.width = 34;
         def.height = 26;
         def.setSrc(IntRectangle(150, 0, (int)def.width, (int)def.height));
-        bBack->setImageDef(def, true);
+        b->setImageDef(def, true);
+        bBack = b;
     }
+#endif
     if (minecraft->useTouchscreen()) {
         bGamemode = new Touch::TButton(1, "Survival mode");
         bCreate  = new Touch::TButton(3, "Create");
@@ -51,7 +58,8 @@ void SimpleChooseLevelScreen::init()
         bCreate  = new Button(3, "Create");
     }
 
-    buttons.push_back(bHeader);
+    if (bHeader)
+        buttons.push_back(bHeader);
     buttons.push_back(bBack);
     buttons.push_back(bGamemode);
     buttons.push_back(bCreate);
@@ -119,6 +127,9 @@ void SimpleChooseLevelScreen::tick()
 void SimpleChooseLevelScreen::render( int xm, int ym, float a )
 {
     renderDirtBackground(0);
+#ifdef PLATFORM_DESKTOP
+    drawCenteredString(minecraft->font, "Create World", width / 2, 8, 0xffffffff);
+#endif
     glEnable2(GL_BLEND);
 
     const char* str = NULL;

@@ -1095,7 +1095,7 @@ void Minecraft::releaseMouse()
 }
 
 bool Minecraft::useTouchscreen() {
-#ifdef RPI
+#if defined(RPI) || defined(PLATFORM_DESKTOP)
 	return false;
 #endif
 	return options.useTouchScreen || !_supportsNonTouchscreen;

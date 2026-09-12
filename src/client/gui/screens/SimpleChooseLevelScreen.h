@@ -29,7 +29,7 @@ public:
 private:
 	Touch::THeader* bHeader;
 	Button* bGamemode;
-	ImageButton* bBack;
+	Button* bBack;
 	Button* bCreate;
 	bool hasChosen;
 
