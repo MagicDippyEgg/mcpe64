@@ -171,6 +171,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Inspect SDK framework headers
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          echo "SDK=$SDK"
+          find "$SDK/System/Library/Frameworks" -maxdepth 4 \( -iname "*openal*" -o -iname "*opengles*" \) 2>/dev/null | head -40
+
       - name: Build
         run: |
           xcodebuild \
