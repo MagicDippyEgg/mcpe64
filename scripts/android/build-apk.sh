@@ -68,7 +68,7 @@ javac --release 8 -sourcepath "$repo/project/android_java/src" \
   -cp "$androidJar" -d "$apkbuild/classes" "${javaSrcs[@]}"
 
 echo "==> d8 (dex)"
-"$d8" --min-api "${DEX_MIN_API:-21}" --lib "$androidJar" --output "$apkbuild" \
+"$d8" --min-api "${DEX_MIN_API:-24}" --lib "$androidJar" --output "$apkbuild" \
   $(find "$apkbuild/classes" -name "*.class")
 
 echo "==> aapt: packaging APK"

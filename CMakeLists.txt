@@ -153,6 +153,7 @@ add_executable(${PROJECT_NAME}
 if(WIN32)
     set(EXTRA_LIBS "ws2_32")
     target_compile_definitions(${PROJECT_NAME} PUBLIC "_CRT_SECURE_NO_WARNINGS")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC "_WIN32_WINNT=0x0601" "WINVER=0x0601")
 endif()
 
 if(PLATFORM STREQUAL "PLATFORM_WIN32" OR PLATFORM STREQUAL "PLATFORM_GLFW")
