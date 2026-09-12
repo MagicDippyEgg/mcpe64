@@ -19,7 +19,7 @@ repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ndk="${ANDROID_NDK:-/tmp/android-ndk-r14b}"
 sdk="${ANDROID_HOME:-/tmp/androidsdk}"
 buildTools="${BUILD_TOOLS:-35.0.0}"
-api="${ANDROID_API:-21}"
+api="${ANDROID_API:-36}"
 
 bt="$sdk/build-tools/$buildTools"
 aapt="$bt/aapt"

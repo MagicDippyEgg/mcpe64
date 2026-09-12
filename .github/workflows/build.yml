@@ -54,9 +54,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Ensure Ninja
+        shell: bash
+        run: which ninja || choco install ninja -y --no-progress
+
       - name: Configure
         shell: bash
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DPLATFORM=$BUILD_PLATFORM
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPLATFORM=$BUILD_PLATFORM
 
       - name: Build
         shell: bash
@@ -127,7 +133,7 @@ jobs:
           mv /tmp/androidsdk/cmdline-tools/cmdline-tools /tmp/androidsdk/cmdline-tools/latest
           yes | /tmp/androidsdk/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null || true
           /tmp/androidsdk/cmdline-tools/latest/bin/sdkmanager \
-            "build-tools;35.0.0" "platforms;android-21"
+            "build-tools;35.0.0" "platforms;android-36"
 
       - name: Build native library (arm64-v8a)
         env:
@@ -141,6 +147,7 @@ jobs:
         env:
           ANDROID_HOME: /tmp/androidsdk
           ANDROID_NDK: /tmp/android-ndk-r14b
+          ANDROID_API: '36'
           BUILD_OUTPUT_DIR: ${{ github.workspace }}/out
         run: bash scripts/android/build-apk.sh
 
