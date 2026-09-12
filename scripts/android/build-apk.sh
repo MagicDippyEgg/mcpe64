@@ -63,12 +63,12 @@ rm -f "$apkbuild/_rgen.apk"
 
 echo "==> javac"
 mapfile -t javaSrcs < <(find "$repo/project/android_java/src" -name "*.java")
-javaSrcs+=("$apkbuild/gen/com/mojang/minecraftpe/R.java")
+javaSrcs+=("$apkbuild/gen/R.java")
 javac --release 8 -sourcepath "$repo/project/android_java/src" \
   -cp "$androidJar" -d "$apkbuild/classes" "${javaSrcs[@]}"
 
 echo "==> d8 (dex)"
-"$d8" --min-api "$api" --lib "$androidJar" --output "$apkbuild" \
+"$d8" --min-api "${DEX_MIN_API:-21}" --lib "$androidJar" --output "$apkbuild" \
   $(find "$apkbuild/classes" -name "*.class")
 
 echo "==> aapt: packaging APK"

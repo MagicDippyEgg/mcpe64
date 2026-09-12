@@ -72,8 +72,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp build/Release/MinecraftPE.exe dist/
-          cp -f build/Release/*.dll dist/ 2>/dev/null || true
+          cp build/MinecraftPE.exe dist/
+          cp build/*.dll dist/ 2>/dev/null || true
           cp -r data dist/data
           tar -a -c -f mcpe64-windows-x64.zip -C dist .
 
@@ -86,11 +86,18 @@ jobs:
   macos:
     name: macOS (arm64)
     runs-on: macos-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Ninja & ccache
+        run: brew install ninja ccache
+
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM=$BUILD_PLATFORM -DCMAKE_OSX_ARCHITECTURES=arm64
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+          -DPLATFORM=$BUILD_PLATFORM -DCMAKE_OSX_ARCHITECTURES=arm64 \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
         run: cmake --build build --parallel
