@@ -11,7 +11,8 @@ SoundEngine::SoundEngine( float maxDistance )
 	_y(0),
 	_z(0),
 	_yRot(0),
-	_invMaxDistance(1.0f / maxDistance)
+	_invMaxDistance(1.0f / maxDistance),
+	_menuMusicStarted(false)
 {
 
 }
@@ -252,3 +253,37 @@ void SoundEngine::playUI(const std::string& name, float volume, float pitch) {
 	}
 }
 #endif
+
+void SoundEngine::playMenuMusic()
+{
+	if (_menuMusicStarted) return;
+	_menuMusicStarted = true;
+
+#if defined(__APPLE__) || defined(PLATFORM_DESKTOP)
+	if (!options || options->music <= 0)
+		return;
+
+	static const char* tracks[] = { "music/calm1.pcm", "music/calm2.pcm", "music/calm3.pcm" };
+	const char* track = tracks[random.nextInt(3)];
+
+	BinaryBlob blob = mc->platform()->readAssetFile(track);
+	if (!blob.data || blob.size <= 16) {
+		_menuMusicStarted = false;
+		return;
+	}
+
+	{
+		SoundDesc desc((char*)blob.data);
+		soundSystem.playMusic(desc, Mth::clamp((float)options->music, 0.0f, 1.0f));
+	}
+	delete[] blob.data;
+#endif
+}
+
+void SoundEngine::stopMenuMusic()
+{
+#if defined(__APPLE__) || defined(PLATFORM_DESKTOP)
+	soundSystem.stopMusic();
+#endif
+	_menuMusicStarted = false;
+}

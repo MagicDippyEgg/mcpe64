@@ -37,11 +37,12 @@ private:
 #ifdef PLATFORM_DESKTOP
 	Button bSingleplayer;
 	Button bMultiplayer;
-	Button bMods;
 	Button bOptionsJava;
 	Button bQuit;
-	float panoramaTimer;
+	int panoramaTimer;
 	std::string splashText;
+	unsigned int _panoramaTex;
+	bool _panoramaTexReady;
 #endif
 
 	std::string copyright;

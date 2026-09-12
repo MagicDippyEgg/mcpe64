@@ -235,7 +235,7 @@ void PauseScreen::buttonClicked(Button* button) {
 		minecraft->setScreen(NULL);
 	}
 	if (button->id == bOptions->id) {
-		minecraft->setScreen(new JavaOptionsScreen(this));
+		minecraft->setScreen(new JavaOptionsScreen(JAVA_OPTIONS_BACK_TO_PAUSE));
 	}
 	if (button->id == bQuit->id) {
 		minecraft->leaveGame();

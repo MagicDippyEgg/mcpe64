@@ -38,7 +38,9 @@ SoundSystemAL::SoundSystemAL()
 :	available(true),
     context(0),
     device(0),
-    _rotation(-9999.9f)
+    _rotation(-9999.9f),
+    _musicSource(0),
+    _musicBuffer(0)
 {
     _buffers.reserve(64);
 	init();
@@ -46,6 +48,7 @@ SoundSystemAL::SoundSystemAL()
 
 SoundSystemAL::~SoundSystemAL()
 {
+    stopMusic();
     alDeleteSources(MaxNumSources, _sources);
 
     for (int i = 0; i < (int)_buffers.size(); ++i)
@@ -190,9 +193,53 @@ void SoundSystemAL::playAt( const SoundDesc& sound, float x, float y, float z, f
     checkError();
 }
 
-/*static*/
 void SoundSystemAL::removeStoppedSounds()
 {
+}
+
+void SoundSystemAL::playMusic( const SoundDesc& sound, float volume )
+{
+    if (!context) return;
+
+    errIdString = "Play music";
+
+    if (_musicBuffer) {
+        alDeleteBuffers(1, &_musicBuffer);
+        _musicBuffer = 0;
+    }
+    if (!_musicSource)
+        alGenSources(1, &_musicSource);
+
+    alGenBuffers(1, &_musicBuffer);
+    checkError();
+
+    ALenum format = (sound.byteWidth==2) ?
+        (sound.channels==2? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16)
+    :   (sound.channels==2? AL_FORMAT_STEREO8  : AL_FORMAT_MONO8);
+
+    alBufferData(_musicBuffer, format, sound.frames, sound.size, sound.frameRate);
+    checkError();
+
+    alSourcei(_musicSource, AL_BUFFER, _musicBuffer);
+    alSourcef(_musicSource, AL_GAIN, volume);
+    alSourcei(_musicSource, AL_LOOPING, AL_TRUE);
+    alSource3f(_musicSource, AL_POSITION, 0, 0, 0);
+    alSourcePlay(_musicSource);
+    checkError();
+}
+
+void SoundSystemAL::stopMusic()
+{
+    if (_musicSource) {
+        alSourceStop(_musicSource);
+        alSourcei(_musicSource, AL_BUFFER, 0);
+        alDeleteSources(1, &_musicSource);
+        _musicSource = 0;
+    }
+    if (_musicBuffer) {
+        alDeleteBuffers(1, &_musicBuffer);
+        _musicBuffer = 0;
+    }
 }
 
 bool SoundSystemAL::getFreeSourceIndex(int* sourceIndex) {

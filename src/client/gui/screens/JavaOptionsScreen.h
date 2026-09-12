@@ -9,11 +9,16 @@
 
 // Minecraft Java 1.4.7-style options menu, used on desktop builds only.
 // Android/iOS keep their touch options screens.
+enum JavaOptionsBack {
+	JAVA_OPTIONS_BACK_TO_MENU,
+	JAVA_OPTIONS_BACK_TO_PAUSE
+};
+
 class JavaOptionsScreen: public Screen
 {
 	typedef Screen super;
 public:
-	JavaOptionsScreen(Screen* parentScreen);
+	JavaOptionsScreen(JavaOptionsBack backTarget);
 	virtual ~JavaOptionsScreen();
 
 	void init();
@@ -26,7 +31,7 @@ private:
 	std::string optionLabel(const Options::Option* option);
 	void refreshOptionButton(unsigned int index);
 
-	Screen* parentScreen;
+	JavaOptionsBack backTarget;
 	std::vector<const Options::Option*> options;
 	std::vector<Button*> optionButtons;
 	Button* doneButton;

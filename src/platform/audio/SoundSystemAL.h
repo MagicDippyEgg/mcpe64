@@ -35,6 +35,8 @@ public:
     virtual void pause(const std::string& name){}
     virtual void stop(const std::string& name){}
 	virtual void playAt(const SoundDesc& sound, float x, float y, float z, float volume, float pitch);
+	virtual void playMusic(const SoundDesc& sound, float volume);
+	virtual void stopMusic();
 
 private:
     class Buffer {
@@ -63,6 +65,8 @@ private:
     
     ALuint _sources[MaxNumSources];
     std::vector<Buffer> _buffers;
+    ALuint _musicSource;
+    ALuint _musicBuffer;
 
     bool getFreeSourceIndex(int* src);
     bool getBufferId(const SoundDesc& sound, ALuint* buf);

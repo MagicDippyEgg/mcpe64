@@ -56,6 +56,9 @@ public:
 	void play(const std::string& name, float x, float y, float z, float volume, float pitch);
 	void playUI(const std::string& name, float volume, float pitch);
 
+	void playMenuMusic();
+	void stopMenuMusic();
+
 	float _getVolumeMult(float x, float y, float z);
 private:
 	void loadLibrary() {}
@@ -63,6 +66,7 @@ private:
     
 	SoundRepository sounds;
 	Minecraft* mc;
+	bool _menuMusicStarted;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_SOUND__SoundEngine_H__*/

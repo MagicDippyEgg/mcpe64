@@ -1160,6 +1160,13 @@ void Minecraft::setSize(int w, int h) {
 		}
 	} else {
 		// auto compute from resolution
+#ifdef PLATFORM_DESKTOP
+		// Java 1.4.7 (and the 0.6.1 desktop build) always used a fixed 2x GUI
+		// scale regardless of window size; at the default 854x480 window that
+		// gives exactly the 427x240 logical resolution the Java title screen
+		// layout was designed for.
+		Gui::GuiScale = 2.0f;
+#else
 		if (width >= 1000) {
         #ifdef __APPLE__
             Gui::GuiScale = (width > 2000)? 8.0f : 4.0f;
@@ -1178,6 +1185,7 @@ void Minecraft::setSize(int w, int h) {
 			Gui::GuiScale = 2.0f;
 		else
 			Gui::GuiScale = 1.0f;
+#endif
 	}
 
 	Gui::InvGuiScale = 1.0f / Gui::GuiScale;

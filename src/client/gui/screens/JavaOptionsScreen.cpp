@@ -1,11 +1,12 @@
 #include "JavaOptionsScreen.h"
 
 #include "../../Minecraft.h"
+#include "ScreenChooser.h"
 #include "../../../platform/input/Keyboard.h"
 
-JavaOptionsScreen::JavaOptionsScreen(Screen* parentScreen)
+JavaOptionsScreen::JavaOptionsScreen(JavaOptionsBack backTarget)
 :	super(),
-	parentScreen(parentScreen),
+	backTarget(backTarget),
 	doneButton(NULL)
 {
 }
@@ -102,7 +103,7 @@ void JavaOptionsScreen::buttonClicked(Button* button)
 {
 	if (button == doneButton) {
 		minecraft->options.save();
-		minecraft->setScreen(parentScreen);
+		minecraft->screenChooser.setScreen(backTarget == JAVA_OPTIONS_BACK_TO_MENU? SCREEN_STARTMENU : SCREEN_PAUSE);
 		return;
 	}
 
@@ -121,10 +122,7 @@ void JavaOptionsScreen::keyPressed(int eventKey)
 {
 	if (eventKey == Keyboard::KEY_ESCAPE) {
 		minecraft->options.save();
-		if (parentScreen)
-			minecraft->setScreen(parentScreen);
-		else
-			minecraft->setScreen(NULL);
+		minecraft->screenChooser.setScreen(backTarget == JAVA_OPTIONS_BACK_TO_MENU? SCREEN_STARTMENU : SCREEN_PAUSE);
 		return;
 	}
 

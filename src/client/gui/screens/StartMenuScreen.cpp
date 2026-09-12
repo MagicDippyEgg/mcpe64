@@ -24,29 +24,21 @@
 #include "SimpleChooseLevelScreen.h"
 #include "../../renderer/Textures.h"
 #include "../../../SharedConstants.h"
+#include "../../sound/SoundEngine.h"
 
 #ifdef PLATFORM_DESKTOP
-// Splash texts straight from the Minecraft Java 1.4.7 title/splashes.txt
-static const char* kJavaSplashes[] = {
-	"As seen on TV!", "Awesome!", "100% pure!", "May contain nuts!",
-	"More polygons!", "Limited edition!", "Flashing letters!", "Made by Notch!",
-	"It's here!", "Best in class!", "It's finished!", "Excitement!",
-	"One of a kind!", "Indev!", "Spiders everywhere!", "Check it out!",
-	"Absolutely no memes!", "Don't do drugs!", "This message will self destruct in 5 seconds!",
-	"Very fun!", "64 bits are better than 32!", "linux rocks!",
-	"Do you smell what the Rock is cooking?", "Very political!", "Wholesome!",
-	"Also try VVVVVV!", "Also try Terraria!", "This is a game for everyone!",
-	"That's a long shot!", "Avoid a wife!", "Here's a pumpkin!",
-	"Ceramic Horse!", "I know what you're doing...", "Candi smashing!",
-	"Aspire to the sky!", "Aww man!", "Okurrrrrr!", "Something went wrong!",
-	"Where is my coffee cup?", "Sad trombone...", "One decade later!",
-	"Such troll.", "Pumpkin pie is better than black forest cake, change my mind!",
-	"The end of the world is near, but not here yet!", "You can't deny, this is da bomb!",
-	"It's not a bug, it's a feature!", "Happy little clouds!", "Welcome to the backrooms!",
-	"Here comes the braindead!", "Testificate!", "Zombies are people too!",
-	"The cake is a lie!", "Do not look at the moon!", "Now with 100% more dots!",
-	"Actually, why not?", "Alrighty then!", "I love you!",
-};
+#include <vector>
+#endif
+
+#ifdef PLATFORM_DESKTOP
+// Java's splashes.txt hashCode for "missingno" (excluded from the rotation)
+static int javaSplashHash(const std::string& s)
+{
+	int h = 0;
+	for (unsigned int i = 0; i < s.size(); ++i)
+		h = 31 * h + (signed char)s[i];
+	return h;
+}
 #endif
 
 // Some kind of default settings, might be overridden in ::init
@@ -59,21 +51,21 @@ StartMenuScreen::StartMenuScreen()
 #ifdef PLATFORM_DESKTOP
 	, bSingleplayer(1, "Singleplayer"),
 	bMultiplayer(2, "Multiplayer"),
-	bMods(3, "Mods..."),
 	bOptionsJava(0, 0, 0, 98, 20, "Options"),
 	bQuit(4, 0, 0, 98, 20, "Quit"),
-	panoramaTimer(0)
+	panoramaTimer(0),
+	_panoramaTex(0),
+	_panoramaTexReady(false)
 #endif
 {
-#ifdef PLATFORM_DESKTOP
-	const unsigned int n = sizeof(kJavaSplashes) / sizeof(kJavaSplashes[0]);
-	splashText = kJavaSplashes[(int)(panoramaTimer * 10e6) % n];
-	panoramaTimer = 0;
-#endif
 }
 
 StartMenuScreen::~StartMenuScreen()
 {
+#ifdef PLATFORM_DESKTOP
+	if (_panoramaTexReady)
+		glDeleteTextures(1, &_panoramaTex);
+#endif
 }
 
 void StartMenuScreen::init()
@@ -85,11 +77,56 @@ void StartMenuScreen::init()
 #ifdef PLATFORM_DESKTOP
 	buttons.push_back(&bSingleplayer);
 	buttons.push_back(&bMultiplayer);
-	buttons.push_back(&bMods);
 	buttons.push_back(&bOptionsJava);
 	buttons.push_back(&bQuit);
 	tabButtons.insert(tabButtons.end(), buttons.begin(), buttons.end());
-	bSingleplayer.active = bMultiplayer.active = bMods.active = bOptionsJava.active = bQuit.active = true;
+	bSingleplayer.active = bMultiplayer.active = bOptionsJava.active = bQuit.active = true;
+
+	// Pick a splash exactly like Java: one random line, only once, from the real splashes.txt
+	if (splashText.empty()) {
+		BinaryBlob blob = minecraft->platform()->readAssetFile("images/java/splashes.txt");
+		if (blob.data && blob.size > 0) {
+			std::vector<std::string> candidates;
+			std::string line;
+			for (unsigned int i = 0; i < blob.size; ++i) {
+				const char c = (char)blob.data[i];
+				if (c == '\n') {
+					if (!line.empty())
+						candidates.push_back(line);
+					line.clear();
+				} else if (c != '\r') {
+					line += c;
+				}
+			}
+			if (!line.empty())
+				candidates.push_back(line);
+
+			unsigned int valid = 0;
+			for (unsigned int i = 0; i < candidates.size(); ++i)
+				if (javaSplashHash(candidates[i]) != 125780783)
+					++valid;
+			if (valid == 0)
+				splashText = "missingno!";
+			else {
+				unsigned int pick = (unsigned int)Mth::random((int)valid);
+				splashText = candidates[0];
+				for (unsigned int i = 0; i < candidates.size(); ++i) {
+					if (javaSplashHash(candidates[i]) == 125780783)
+						continue;
+					if (pick == 0) {
+						splashText = candidates[i];
+						break;
+					}
+					--pick;
+				}
+			}
+		}
+		if (splashText.empty())
+			splashText = "missingno!";
+	}
+
+	if (minecraft->soundEngine)
+		minecraft->soundEngine->playMenuMusic();
 	return;
 #endif
 
@@ -135,19 +172,24 @@ void StartMenuScreen::init()
 void StartMenuScreen::setupPositions() {
 	int yBase;
 #ifdef PLATFORM_DESKTOP
-	// Minecraft Java 1.4.7 title menu layout
-	yBase = height / 4 + 48;
+	// Minecraft Java 1.4.7 title menu layout:
+	// Singleplayer (w/2-100, var4, 200x20), Multiplayer (var4+24),
+	// Options & Quit together as a 98x20 pair at var4+72+12.
+	const int var4 = height / 4 + 48;
+
+	bSingleplayer.width = 200;
+	bSingleplayer.height = 20;
+	bMultiplayer.width = 200;
+	bMultiplayer.height = 20;
 
 	bSingleplayer.x = (width - 200) / 2;
-	bSingleplayer.y = yBase;
+	bSingleplayer.y = var4;
 	bMultiplayer.x = (width - 200) / 2;
-	bMultiplayer.y = yBase + 24;
-	bMods.x = (width - 200) / 2;
-	bMods.y = yBase + 48;
+	bMultiplayer.y = var4 + 24;
 	bOptionsJava.x = width / 2 - 98;
-	bOptionsJava.y = yBase + 84;
+	bOptionsJava.y = var4 + 72 + 12;
 	bQuit.x = width / 2 + 2;
-	bQuit.y = yBase + 84;
+	bQuit.y = var4 + 72 + 12;
 
 	copyrightPosX = width - minecraft->font->width("Copyright Mojang AB. Do not distribute!") - 2;
 	versionPosX = 2;
@@ -184,9 +226,7 @@ void StartMenuScreen::tick() {
 		return;
 	}
 #ifdef PLATFORM_DESKTOP
-	panoramaTimer += 0.005f;
-	const unsigned int n = sizeof(kJavaSplashes) / sizeof(kJavaSplashes[0]);
-	splashText = kJavaSplashes[(int)(panoramaTimer * 7000.0f) % n];
+	++panoramaTimer;
 #else
 	_updateLicense();
 #endif
@@ -204,7 +244,7 @@ void StartMenuScreen::buttonClicked(Button* button) {
 		return;
 	}
 	if (button == &bOptionsJava) {
-		minecraft->setScreen(new JavaOptionsScreen(this));
+		minecraft->setScreen(new JavaOptionsScreen(JAVA_OPTIONS_BACK_TO_MENU));
 		return;
 	}
 	if (button == &bQuit) {
@@ -249,6 +289,34 @@ bool StartMenuScreen::isInGameScreen() { return false; }
 #ifdef PLATFORM_DESKTOP
 void StartMenuScreen::renderJavaPanorama()
 {
+	if (!_panoramaTexReady) {
+		glGenTextures(1, &_panoramaTex);
+		glBindTexture2(GL_TEXTURE_2D, _panoramaTex);
+		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D2(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		_panoramaTexReady = true;
+	}
+
+	static const char* paths[6] = {
+		"java/panorama0.png", "java/panorama1.png", "java/panorama2.png",
+		"java/panorama3.png", "java/panorama4.png", "java/panorama5.png"
+	};
+	static const float rots[6][3] = {
+		{ 0,    0, 0 },
+		{ 90,   0, 1 },
+		{ 180,  0, 1 },
+		{ -90,  0, 1 },
+		{ 90,   1, 0 },
+		{ -90,  1, 0 }
+	};
+
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	glViewport(0, 0, 256, 256);
+
 	glDisable2(GL_CULL_FACE);
 	glDisable2(GL_DEPTH_TEST);
 	glDepthMask(false);
@@ -257,51 +325,92 @@ void StartMenuScreen::renderJavaPanorama()
 	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glColor4f2(1, 1, 1, 1);
 
-	static const char* paths[6] = {
-		"java/panorama0.png", "java/panorama1.png", "java/panorama2.png",
-		"java/panorama3.png", "java/panorama4.png", "java/panorama5.png"
-	};
-	static const float rots[6][4] = {
-		{ 0,    0, 0, 0 },
-		{ 90,   0, 1, 0 },
-		{ 180,  0, 1, 0 },
-		{ -90,  0, 1, 0 },
-		{ 90,   1, 0, 0 },
-		{ -90,  1, 0, 0 }
-	};
-
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadIdentity();
-	gluPerspective(90.0f, (float)width / (float)height, 0.05f, 10.0f);
+	glLoadIdentity2();
+	gluPerspective(120.0f, 1.0f, 0.05f, 10.0f);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadIdentity();
+	glLoadIdentity2();
 	glRotatef2(180.0f, 1, 0, 0);
 
-	const float m = panoramaTimer;
-	glRotatef2(Mth::sin(m / 400.0f) * 25.0f + 20.0f, 1, 0, 0);
-	glRotatef2(-m * 0.1f, 0, 1, 0);
-
+	// drawPanorama: 8x8 grid of camera jitter tiles, each compositing all 6 faces
+	const float timer = (float)panoramaTimer;
+	const int grid = 8;
 	Tesselator& t = Tesselator::instance;
-	for (int i = 0; i < 6; ++i) {
-		minecraft->textures->loadAndBindTexture(paths[i]);
+	for (int tile = 0; tile < grid * grid; ++tile) {
 		glPushMatrix2();
-		if (i > 0)
-			glRotatef2(rots[i][0], rots[i][1], rots[i][2], rots[i][3]);
-		t.begin();
-		t.vertexUV(-1.0f, -1.0f, 1.0f, 0.0f, 0.0f);
-		t.vertexUV( 1.0f, -1.0f, 1.0f, 1.0f, 0.0f);
-		t.vertexUV( 1.0f,  1.0f, 1.0f, 1.0f, 1.0f);
-		t.vertexUV(-1.0f,  1.0f, 1.0f, 0.0f, 1.0f);
-		t.draw();
+		glTranslatef2(((float)(tile % grid) / (float)grid - 0.5f) / 64.0f,
+		              ((float)(tile / grid) / (float)grid - 0.5f) / 64.0f, 0.0f);
+		glRotatef2(Mth::sin((timer + (float)tile) / 400.0f) * 25.0f + 20.0f, 1, 0, 0);
+		glRotatef2(-(timer + (float)tile) * 0.1f, 0, 1, 0);
+
+		for (int face = 0; face < 6; ++face) {
+			glPushMatrix2();
+			if (face > 0)
+				glRotatef2(rots[face][0], rots[face][1], rots[face][2], rots[face][3]);
+			minecraft->textures->loadAndBindTexture(paths[face]);
+			const int alpha = 255 / (tile + 1);
+			t.begin();
+			t.color(1.0f, 1.0f, 1.0f, (float)alpha / 255.0f);
+			t.vertexUV(-1.0f, -1.0f, 1.0f, 0.0f, 0.0f);
+			t.vertexUV( 1.0f, -1.0f, 1.0f, 1.0f, 0.0f);
+			t.vertexUV( 1.0f,  1.0f, 1.0f, 1.0f, 1.0f);
+			t.vertexUV(-1.0f,  1.0f, 1.0f, 0.0f, 1.0f);
+			t.draw();
+			glPopMatrix2();
+		}
 		glPopMatrix2();
+		glColorMask(true, true, true, false);
 	}
+	glColorMask(true, true, true, true);
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
+
+	// rotateAndBlurSkybox: 8 passes, copying the framebuffer into the viewport texture
+	// and smearing it across the 256x256 target with three offsets
+	glBindTexture2(GL_TEXTURE_2D, _panoramaTex);
+	for (int pass = 0; pass < 8; ++pass) {
+		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, 256, 256);
+		glEnable2(GL_BLEND);
+		glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glColorMask(true, true, true, false);
+
+		for (int k = 0; k < 3; ++k) {
+			const float shift = (float)(k - 1) / 256.0f;
+			t.begin();
+			t.color(1.0f, 1.0f, 1.0f, 1.0f / (float)(k + 1));
+			t.vertexUV((float)width, (float)height, blitOffset, shift, 0.0f);
+			t.vertexUV((float)width, 0.0f,              blitOffset, 1.0f + shift, 0.0f);
+			t.vertexUV(0.0f,         0.0f,              blitOffset, 1.0f + shift, 1.0f);
+			t.vertexUV(0.0f,         (float)height,     blitOffset, shift, 1.0f);
+			t.draw();
+		}
+		glColorMask(true, true, true, true);
+	}
+
+	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+	// Final fit stretch onto the whole screen
+	glBindTexture2(GL_TEXTURE_2D, _panoramaTex);
+	glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glEnable2(GL_BLEND);
+	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	const float fit = (width > height) ? 120.0f / (float)width : 120.0f / (float)height;
+	const float hu = (float)height * fit / 256.0f;
+	const float wu = (float)width * fit / 256.0f;
+	glColor4f2(1, 1, 1, 1);
+	t.begin();
+	t.color(1, 1, 1, 1);
+	t.vertexUV(0.0f,         (float)height, blitOffset, 0.5f - hu, 0.5f + wu);
+	t.vertexUV((float)width, (float)height, blitOffset, 0.5f - hu, 0.5f - wu);
+	t.vertexUV((float)width, 0.0f,          blitOffset, 0.5f + hu, 0.5f - wu);
+	t.vertexUV(0.0f,         0.0f,          blitOffset, 0.5f + hu, 0.5f + wu);
+	t.draw();
 
 	glDepthMask(true);
 	glEnable2(GL_DEPTH_TEST);
