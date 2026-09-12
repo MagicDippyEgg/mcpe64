@@ -41,6 +41,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/client/gui/components/ScrollingPane.cpp \
 ../../../src/client/gui/components/Slider.cpp \
 ../../../src/client/gui/components/SmallButton.cpp \
+../../../src/client/gui/components/TextBox.cpp \
 ../../../src/client/gui/Font.cpp \
 ../../../src/client/gui/Gui.cpp \
 ../../../src/client/gui/GuiComponent.cpp \

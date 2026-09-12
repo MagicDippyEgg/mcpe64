@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "-Wno-c++11-narrowing -Wno-narrowing -Wno-invalid-source-encoding -Wno-reserved-user-defined-literal")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "-Wno-narrowing")
 endif()
 
 CPMAddPackage("gh:madler/zlib@1.3.2")
@@ -26,7 +28,7 @@ CPMAddPackage(
 CPMAddPackage(
     NAME "openal"
     GIT_REPOSITORY "https://github.com/kcat/openal-soft.git"
-    GIT_TAG "1.25.1"
+    GIT_TAG "1.24.2"
     OPTIONS
         "ALSOFT_EXAMPLES OFF"
         "ALSOFT_TESTS OFF"

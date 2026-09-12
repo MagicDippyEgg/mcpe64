@@ -1,0 +1,184 @@
+name: Build (64-bit)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILD_PLATFORM: PLATFORM_GLFW
+
+jobs:
+  linux:
+    name: Linux x64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build pkg-config \
+            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev \
+            libxi-dev libxext-dev libwayland-dev libxkbcommon-dev \
+            libegl1-mesa-dev mesa-common-dev libgl1-mesa-dev
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPLATFORM=$BUILD_PLATFORM
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp build/MinecraftPE dist/
+          cp -r data dist/data
+          tar czf mcpe64-linux-x64.tar.gz -C dist .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcpe64-linux-x64
+          path: mcpe64-linux-x64.tar.gz
+          if-no-files-found: error
+
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        shell: bash
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DPLATFORM=$BUILD_PLATFORM
+
+      - name: Build
+        shell: bash
+        run: cmake --build build --config Release --parallel
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp build/Release/MinecraftPE.exe dist/
+          cp -f build/Release/*.dll dist/ 2>/dev/null || true
+          cp -r data dist/data
+          tar -a -c -f mcpe64-windows-x64.zip -C dist .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcpe64-windows-x64
+          path: mcpe64-windows-x64.zip
+          if-no-files-found: error
+
+  macos:
+    name: macOS (arm64)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM=$BUILD_PLATFORM -DCMAKE_OSX_ARCHITECTURES=arm64
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp build/MinecraftPE dist/
+          cp -r data dist/data
+          tar czf mcpe64-macos-arm64.tar.gz -C dist .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcpe64-macos-arm64
+          path: mcpe64-macos-arm64.tar.gz
+          if-no-files-found: error
+
+  android:
+    name: Android arm64-v8a (APK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download NDK r14b
+        run: |
+          curl -fsSL -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-r14b-linux-x86_64.zip
+          unzip -q /tmp/ndk.zip -d /tmp
+          test -x /tmp/android-ndk-r14b/ndk-build
+
+      - name: Install Android SDK build tools
+        run: |
+          curl -fsSL -o /tmp/clt.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          mkdir -p /tmp/androidsdk/cmdline-tools
+          unzip -q /tmp/clt.zip -d /tmp/androidsdk/cmdline-tools
+          mv /tmp/androidsdk/cmdline-tools/cmdline-tools /tmp/androidsdk/cmdline-tools/latest
+          yes | /tmp/androidsdk/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null || true
+          /tmp/androidsdk/cmdline-tools/latest/bin/sdkmanager \
+            "build-tools;35.0.0" "platforms;android-21"
+
+      - name: Build native library (arm64-v8a)
+        env:
+          ANDROID_NDK: /tmp/android-ndk-r14b
+          NDK_MODULE_PATH: ${{ github.workspace }}/project/lib_projects
+          NDK_TOOLCHAIN_VERSION: '4.9'
+        working-directory: project/android
+        run: /tmp/android-ndk-r14b/ndk-build -j$(nproc)
+
+      - name: Package APK
+        env:
+          ANDROID_HOME: /tmp/androidsdk
+          ANDROID_NDK: /tmp/android-ndk-r14b
+          BUILD_OUTPUT_DIR: ${{ github.workspace }}/out
+        run: bash scripts/android/build-apk.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcpe64-android-arm64-v8a
+          path: out/mcpe64-android-arm64-v8a-*.apk
+          if-no-files-found: error
+
+  ios:
+    name: iOS arm64 (best-effort)
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project project/iosproj/minecraftpe.xcodeproj \
+            -target minecraftpe \
+            -configuration Release \
+            -sdk iphoneos \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES VALID_ARCHS=arm64 \
+            GCC_VERSION=com.apple.compilers.llvm.clang.1_0 \
+            SDKROOT=iphoneos IPHONEOS_DEPLOYMENT_TARGET=13.0 \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            BUILD_DIR="$GITHUB_WORKSPACE/iosbuild" build
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          APP=$(find "$GITHUB_WORKSPACE/iosbuild" -path '*.app' -type d | head -n1)
+          cp -r "$APP" dist/MinecraftPE.app
+          (cd dist && zip -r ../mcpe64-ios-arm64.zip MinecraftPE.app)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcpe64-ios-arm64
+          path: mcpe64-ios-arm64.zip
+          if-no-files-found: error
